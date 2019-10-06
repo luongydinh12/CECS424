@@ -1,0 +1,88 @@
+%Name Dinh Luong
+%CECS424
+%Lab Assignment 1
+%Profesor Neal Terrell
+
+- use_module(library(clpfd)).
+
+solve(Cages, S) -
+	%1. S must have 6 rows.
+	%length(S,6),
+	%2. Each row in S must be length 6
+	%length(Cols,6),
+	S = [[_,_,_,_,_,_],
+         [_,_,_,_,_,_],
+         [_,_,_,_,_,_],
+         [_,_,_,_,_,_],
+         [_,_,_,_,_,_],
+         [_,_,_,_,_,_]],
+	
+	%3. Each row in S must only contain values from 1 to 6
+	% append2 flattens the first argument into the second,
+	% giving a single list of all the squares in the puzzle.
+	append(S, Values),
+	Values ins 1..6,
+	
+	%5. Each row in S must contain all distinct values (no duplicates).
+	% maplist2 corresponds to all; it is true if the given predicate function is true
+	% when applied to all elements of the given list.
+	maplist(all_different, S),
+
+	%6. Each column in S must contain all distinct values
+	% transpose2 does a matrix transpose on the puzzle to give a list of
+	% columns instead of rows.
+	transpose(S, Cols),
+	maplist(all_different, Cols),
+
+	
+	%4. The entries in S must satisfy the cages of the puzzle.
+	check_cages(Cages,S),
+
+	%S =[A, B, C, D, E, F],
+	maplist(label,S).
+
+
+%cell_values(Cells, S, Values)
+cell_values([],_,[]).
+cell_values([[Ha,Hb]T],S, [VHVT])-
+        nth0(Ha,S,Y),
+        nth0(Hb,Y,VH),
+        cell_values(T,S,VT).
+		
+
+sum_list([],0).
+sum_list([AB], Sum)- sum_list(B,Sum2),Sum#=A+Sum2.
+product_list([],1).
+product_list([AB], Product)- product_list(B,Product2), Product#=AProduct2.
+
+
+check_constraint(cage(id,Value,Cells),S)- cell_values(Cells,S,[Value]).
+check_constraint(cage(add,Value,Cells),S)- cell_values(Cells,S,V),sum_list(V,SumList), Value#=SumList.
+check_constraint(cage(sub,Value,Cells),S)- cell_values(Cells,S,[V1,V2]),(Value#=(V1-V2);Value#=(V2-V1)).
+check_constraint(cage(mult,Value,Cells),S)- cell_values(Cells,S,V),product_list(V,ProdList),Value#=ProdList.
+check_constraint(cage(div,Value,Cells),S)- cell_values(Cells,S,[V1,V2]),(Value#=(V1V2);Value#=(V2V1)).
+check_cages([],_).
+check_cages([HT], S)- check_constraint(H,S), check_cages(T,S).
+
+
+
+
+
+Cages=[
+cage(mult,120,[[0,0],[0,1],[1,0],[2,0]]),
+cage(mult,144,[[0,2],[1,2],[1,3],[1,4]]),
+cage(id,4,[[0,3]]),
+cage(add,6,[[0,4],[0,5]]),
+cage(div,2,[[1,1],[2,1]]),
+cage(div,3,[[1,5],[2,5]]),
+cage(sub,3,[[2,2],[3,2]]),
+cage(sub,4,[[2,3],[2,4]]),
+cage(mult,15,[[3,0],[3,1]]),
+cage(add,16,[[3,3],[3,4],[4,3],[5,3]]),
+cage(mult,48,[[3,5],[4,4],[4,5]]),
+cage(sub,3,[[4,0],[5,0]]),
+cage(sub,1,[[4,1],[4,2]]),
+cage(sub,5,[[5,1],[5,2]]),
+cage(mult,6,[[5,4],[5,5]])
+],solve(Cages,S).
+
