@@ -91,9 +91,9 @@ let connectValidations reg =
     | Failure f -> Failure f
 
 // Try it!
-connectValidations {username = ""; email="a@b.com"} |> printfn "%A"
-connectValidations {username = "asdf"; email="b.com"} |> printfn "%A"
-connectValidations reg1 |> printfn "%A"
+//connectValidations {username = ""; email="a@b.com"} |> printfn "%A"
+//connectValidations {username = "asdf"; email="b.com"} |> printfn "%A"
+//connectValidations reg1 |> printfn "%A"
 
 // But this is too specific; we want something more generic. In railway terms, we want
 // a means of converting an existing switch function to a two-track input, which could then
@@ -112,7 +112,7 @@ let validate2 =
     >> bind emailHasAtSign
     >> bind emailHasLocalPart
 
-validate2 reg1 |> printfn "\n\nvalidate2 with bind:\n%A"
+//validate2 reg1 |> printfn "\n\nvalidate2 with bind:\n%A"
 
 
 // Binding is so common that we can introduce an operator to make our life easier.
@@ -125,4 +125,64 @@ let validate3 =
     >=> emailHasAtSign
     >=> emailHasLocalPart
 
-printf("\nHello World\n\n")
+printf("\nStart of Program: \n\n")
+
+// *Lecture's Code not printed*
+
+// **************************** Lab Assignment 3 *******************************
+// Name: Dinh Luong
+// Lab Assignment 3 : Railway to Hell
+// CECS 424
+// Professor Neal Terrell
+
+let reg2 = {username = "dinh"; email = "luongydinh@gmail.com"}
+let reg3 = {username = "dinh"; email = "luongydinh@throwawaymail.com"}
+//1. existingAccounts with 5 disctinct email (no dash or period)
+let existingAccounts = ["luongydinh@gmail.com"; 
+                        "dinh123@csulb.edu";
+                        "helloworld@hotmail.com";
+                        "cecscsulb@outlook.com";
+                        "bpjen@bp.com"]
+//printfn "%A" existingAccounts 
+
+//2. blacklistedDomains with "mailinator.org" and "throwawaymail.com"
+let blacklistedDomains = ["mailinator.org"; "throwawaymail.com"]
+
+//3a. Terminal function uniqueEmail
+let uniqueEmail list reg =
+    if (List.contains reg.email list) then
+        Failure "Email exists"
+    else
+        Success reg
+
+//uniqueEmail existingAccounts reg1 |> printfn "Test 3a: %A" 
+//uniqueEmail existingAccounts reg2 |> printfn "Test 3a: %A" 
+
+//3b. Terminal function emailNotBlacklisted 
+// Helper function to get only Domain
+let domain reg =
+    let start = reg.email.IndexOf('@') + 1
+    reg.email.[start..]
+
+let emailNotBlacklisted list reg =
+    let d = domain reg
+    if (List.contains d list) then
+        Failure "Domain is blacklisted"
+    else
+        Success reg
+//emailNotBlacklisted blacklistedDomains reg1 |> printfn "Test 3b: %A" 
+//emailNotBlacklisted blacklistedDomains reg3 |> printfn "Test 3b: %A"
+//let validate4 = uniqueEmail existingAccounts >=> emailNotBlacklisted blacklistedDomains
+//validate4 reg3 |> printfn "Test combined 3a and 3b: %A"
+
+//4. Helper function bypass over a single-track function
+//4a. bypass
+let bypass singletrack reg =
+    singletrack reg |> Success 
+
+//4b. >->
+let (>->) switch1 bypassFunction reg =
+    let promote = bypass bypassFunction
+    bind promote (switch1 reg)
+
+
