@@ -120,10 +120,7 @@ let (>=>) switch1 switch2 reg =
     bind switch2 (switch1 reg)
 
 // And now we get
-let validate3 =
-    usernameExists
-    >=> emailHasAtSign
-    >=> emailHasLocalPart
+
 
 printf("\nStart of Program: \n\n")
 
@@ -135,15 +132,12 @@ printf("\nStart of Program: \n\n")
 // CECS 424
 // Professor Neal Terrell
 
-let reg2 = {username = "dinh"; email = "luongydinh@gmail.com"}
-let reg3 = {username = "dinh"; email = "luongydinh@throwawaymail.com"}
 //1. existingAccounts with 5 disctinct email (no dash or period)
 let existingAccounts = ["luongydinh@gmail.com"; 
                         "dinh123@csulb.edu";
                         "helloworld@hotmail.com";
                         "cecscsulb@outlook.com";
                         "bpjen@bp.com"]
-//printfn "%A" existingAccounts 
 
 //2. blacklistedDomains with "mailinator.org" and "throwawaymail.com"
 let blacklistedDomains = ["mailinator.org"; "throwawaymail.com"]
@@ -154,9 +148,6 @@ let uniqueEmail list reg =
         Failure "Email exists"
     else
         Success reg
-
-//uniqueEmail existingAccounts reg1 |> printfn "Test 3a: %A" 
-//uniqueEmail existingAccounts reg2 |> printfn "Test 3a: %A" 
 
 //3b. Terminal function emailNotBlacklisted 
 // Helper function to get only Domain
@@ -170,10 +161,6 @@ let emailNotBlacklisted list reg =
         Failure "Domain is blacklisted"
     else
         Success reg
-//emailNotBlacklisted blacklistedDomains reg1 |> printfn "Test 3b: %A" 
-//emailNotBlacklisted blacklistedDomains reg3 |> printfn "Test 3b: %A"
-//let validate4 = uniqueEmail existingAccounts >=> emailNotBlacklisted blacklistedDomains
-//validate4 reg3 |> printfn "Test combined 3a and 3b: %A"
 
 //4. Helper function bypass over a single-track function
 //4a. bypass
@@ -185,4 +172,50 @@ let (>->) switch1 bypassFunction reg =
     let promote = bypass bypassFunction
     bind promote (switch1 reg)
 
+//5. Single-track functions:
+//5a. lowercaseEmail
+let lowercaseEmail reg =
+    let reglower = {username= reg.username; email= reg.email.ToLower()}
+    reglower
+//5b. canonicalizeEmail and its helper functions
+let localpart reg =
+    let ending = reg.email.IndexOf('@') - 1
+    reg.email.[..ending]
+let removeperiod s = s.ToString().Replace(".","")
+let removedashes s = s.ToString().Replace("-","")
+let removeplus s =
+    if s.ToString().Contains("+") then
+        let ending = s.ToString().IndexOf('+') - 1
+        s.ToString().[..ending]
+    else
+        s.ToString()
+let canonicalizeEmail reg = 
+    if domain reg = "gmail.com" then
+        let localNew = localpart reg |> removedashes |> removeperiod |> removeplus
+        let regNew = {username = reg.username; email = localNew+"@gmail.com"}
+        regNew
+    else
+        reg
 
+//6. Incorporate the new functions into the existing validation system
+let validate3 =
+    usernameExists
+    >=> emailHasAtSign
+    >=> emailHasLocalPart
+    >-> lowercaseEmail
+    >-> canonicalizeEmail
+    >=> emailNotBlacklisted blacklistedDomains
+    >=> uniqueEmail existingAccounts
+
+
+let record1 = {username = "dinh1"; email = "luong-Y.dinh@gmail.com"}
+let record2 = {username = "dinhluong"; email = "@mail.com"}
+let record3 = {username = "Neal"; email = "Neal.Ter-rell+a54064@csulb.com"}
+let record4 = {username = "dinh2"; email = "edel.gard+spam123@gmail.com"}
+let record5 = {username = ""; email = "byleth@throwawaymail.com"}
+
+validate3 record1 |> printfn "%A"
+validate3 record2 |> printfn "%A"
+validate3 record3 |> printfn "%A"
+validate3 record4 |> printfn "%A"
+validate3 record5 |> printfn "%A"
