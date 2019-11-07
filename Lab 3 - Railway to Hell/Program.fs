@@ -213,9 +213,10 @@ let record2 = {username = "dinhluong"; email = "@mail.com"}
 let record3 = {username = "Neal"; email = "Neal.Ter-rell+a54064@csulb.com"}
 let record4 = {username = "dinh2"; email = "edel.gard+spam123@gmail.com"}
 let record5 = {username = ""; email = "byleth@throwawaymail.com"}
-
+let record6 ={username =  "dl"; email = "empty@throwawaymail.com"}
 validate3 record1 |> printfn "%A"
 validate3 record2 |> printfn "%A"
 validate3 record3 |> printfn "%A"
 validate3 record4 |> printfn "%A"
 validate3 record5 |> printfn "%A"
+validate3 record6 |> printfn "%A"
