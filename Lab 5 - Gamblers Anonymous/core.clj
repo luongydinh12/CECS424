@@ -211,26 +211,47 @@
 
   ;; @TODO: play the game! First the player gets their turn. The dealer then takes their turn,
   ;; using the state of the game after the player's turn finished.
-  ;;(let [ playerturn (player-turn game-state)
-  ;;       dealerturn (dealer-turn playerturn)
-  ;;])
 
   ;; @TODO: determine the winner! Get the hand scores for the dealer and the player.
   ;; The player wins if they did not bust (score <= 21) AND EITHER:
   ;;     - the dealer busts; OR
   ;;     - the player's score > dealer's score
   ;; If neither side busts and they have the same score, the result is a "draw".
-  (let [ playerturn (player-turn game-state player-strategy)
-         dealerturn (dealer-turn playerturn)
-         playerscore (hand-total (player-hand dealerturn))
-         dealerscore (hand-total (dealer-hand dealerturn))]
-     (if (and (<= playerscore 21) (or (> dealerscore 21) (> playerscore dealerscore)))
-         (make-log 1 0 0)
-         (if (= playerscore dealerscore)
-             (make-log 0 0 1)
-             (make-log 0 1 0)
-         )
-     )      
+  (let [playerhand (player-hand game-state)
+        playerscore (hand-total playerhand)
+        player-aces (count (filter #(= 1 (kind %)) playerhand))
+        dealerhand (dealer-hand game-state)
+        dealerscore (hand-total dealerhand)
+        dealer-aces (count (filter #(= 1 (kind %)) dealerhand))]
+    (cond
+      (and (= dealerscore 21) (= 1 dealer-aces))
+        (if (and (= playerscore 21) (= 1 player-aces))
+            (do (println (str "Dealer has Blackjack: " 
+                               (clojure.string/join " & " (map card-str dealerhand))))
+                (println (str "Player has Blackjack: " 
+                               (clojure.string/join " & " (map card-str playerhand))))
+                (make-log 0 0 1)) ;; draw
+            (do (println (str "Dealer has Blackjack: " 
+                               (clojure.string/join " & " (map card-str dealerhand))))
+                (println (str "Player's hand: " 
+                               (clojure.string/join " & " (map card-str playerhand))))               
+                (make-log 0 1 0) ;; dealer wins
+            )
+        )
+      :else
+        (let [playerturn (player-turn game-state player-strategy)
+              dealerturn (dealer-turn playerturn)
+              playerscore (hand-total (player-hand dealerturn))
+              dealerscore (hand-total (dealer-hand dealerturn))]
+          (if (and (<= playerscore 21) (or (> dealerscore 21) (> playerscore dealerscore)))
+              (make-log 1 0 0)
+              (if (= playerscore dealerscore)
+                  (make-log 0 0 1)
+                  (make-log 0 1 0)
+              )
+          )      
+        )
+    )
   )
   ;; Return a game log object with a value of 1 for the correct winner.
   ;; @TODO: this is a "blank" game log. Return something more appropriate for each of the

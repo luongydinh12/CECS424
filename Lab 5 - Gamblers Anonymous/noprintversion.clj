@@ -160,17 +160,32 @@
 ;; Plays one game of blackjack in which the player follows the given strategy.
 ;; Returns a log of the result of the game.
 (defn one-game [game-state player-strategy]
-  (let [ playerturn (player-turn game-state player-strategy)
-         dealerturn (dealer-turn playerturn)
-         playerscore (hand-total (player-hand dealerturn))
-         dealerscore (hand-total (dealer-hand dealerturn))]
-     (if (and (<= playerscore 21) (or (> dealerscore 21) (> playerscore dealerscore)))
-         (make-log 1 0 0)
-         (if (= playerscore dealerscore)
-             (make-log 0 0 1)
-             (make-log 0 1 0)
-         )
-     )      
+  (let [playerhand (player-hand game-state)
+        playerscore (hand-total playerhand)
+        player-aces (count (filter #(= 1 (kind %)) playerhand))
+        dealerhand (dealer-hand game-state)
+        dealerscore (hand-total dealerhand)
+        dealer-aces (count (filter #(= 1 (kind %)) dealerhand))]
+    (cond
+      (and (= dealerscore 21) (= 1 dealer-aces))
+        (if (and (= playerscore 21) (= 1 player-aces))
+            (make-log 0 0 1) ;; draw              
+            (make-log 0 1 0) ;; dealer wins
+        )
+      :else
+        (let [playerturn (player-turn game-state player-strategy)
+              dealerturn (dealer-turn playerturn)
+              playerscore (hand-total (player-hand dealerturn))
+              dealerscore (hand-total (dealer-hand dealerturn))]
+          (if (and (<= playerscore 21) (or (> dealerscore 21) (> playerscore dealerscore)))
+              (make-log 1 0 0)
+              (if (= playerscore dealerscore)
+                  (make-log 0 0 1)
+                  (make-log 0 1 0)
+              )
+          )      
+        )
+    )
   )
 )
 
